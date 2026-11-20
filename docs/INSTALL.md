@@ -30,7 +30,7 @@ source:
 gh attestation verify linknode-linux-arm64 --repo betterbotbureau/linkus
 ```
 
-Windows and macOS warn the first time a downloaded binary starts. Verify the checksum or the attestation, or
+Windows may warn the first time a downloaded binary starts; on a Mac, a binary downloaded in a browser has to be allowed once in System Settings. Verify the checksum or the attestation, or
 build from source.
 
 ## First run
