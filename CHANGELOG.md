@@ -12,7 +12,8 @@ headless devices.
 - One static binary per platform: Linux amd64, arm64, armv7, 386, mips,
   mipsle and riscv64, plus Windows and macOS for the command line.
 - A permanent public address (`https://<id>.mdoc.us`) for one folder,
-  served as a static website directly from the device over encrypted
+  served as a website (pages, scripts, small web apps; nothing runs on
+  the device itself) directly from the device over encrypted
   WebRTC, with no relay and usually no router setup (verified PCP,
   NAT-PMP or UPnP port mapping when the router offers it).
 - Managed with plain commands (`status`, `publish on|off`, `folder`,

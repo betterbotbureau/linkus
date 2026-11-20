@@ -5,8 +5,8 @@ a folder served as a website, and no port forwarding.**
 
 Link Node is the open-source core of [Link](https://link.us): a single
 binary for Linux, Raspberry Pi, NAS boxes, routers and other always-on or
-headless devices. It serves one folder as a static website at a permanent
-public address like:
+headless devices. It serves one folder as a website (pages, images,
+scripts, small web apps) at a permanent public address like:
 
 ```
 https://58310427.mdoc.us
@@ -33,6 +33,10 @@ on this core and available from [link.us](https://link.us).
 - **No router setup, usually.** The node connects through typical home
   and office networks by itself, and verifies any router port mapping
   before trusting it.
+- **Real websites, nothing running on the device.** The node only hands
+  out files; it never runs code itself. Each site is its own browser
+  origin, so its pages' JavaScript runs in the visitor's browser:
+  galleries, games, maps and small apps work as on any host.
 - **Small and dependency-free.** One static binary (no cgo), about 13 MB,
   for amd64, arm64, armv7 and 386; anything that can write files can
   publish.
