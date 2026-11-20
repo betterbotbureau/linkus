@@ -1,0 +1,19 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="A garage workbench with tools and a bookshelf in progress">
+  <rect width="400" height="300" fill="#e8e2d6"/>
+  <rect x="0" y="210" width="400" height="90" fill="#b0a894"/>
+  <rect x="30" y="150" width="340" height="16" rx="3" fill="#8a6a4c"/>
+  <rect x="50" y="166" width="14" height="90" fill="#6f543c"/>
+  <rect x="336" y="166" width="14" height="90" fill="#6f543c"/>
+  <rect x="70" y="60" width="120" height="76" rx="4" fill="#caa06a"/>
+  <line x1="70" y1="86" x2="190" y2="86" stroke="#a37c4e" stroke-width="5"/>
+  <line x1="70" y1="112" x2="190" y2="112" stroke="#a37c4e" stroke-width="5"/>
+  <rect x="80" y="92" width="14" height="18" fill="#d9775a"/>
+  <rect x="98" y="90" width="12" height="20" fill="#5b7fb8"/>
+  <rect x="114" y="94" width="13" height="16" fill="#7aa36f"/>
+  <rect x="240" y="120" width="90" height="30" rx="4" fill="#9a9da6"/>
+  <rect x="252" y="100" width="12" height="24" fill="#4a4e59"/>
+  <circle cx="306" cy="135" r="8" fill="#4a4e59"/>
+  <rect x="220" y="140" width="56" height="10" rx="3" fill="#c46a3f" transform="rotate(-18 220 140)"/>
+  <line x1="60" y1="40" x2="60" y2="150" stroke="#8d8577" stroke-width="4"/>
+  <circle cx="60" cy="40" r="10" fill="#ffd97a"/>
+</svg>

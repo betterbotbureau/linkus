@@ -1,0 +1,13 @@
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 400 300" role="img" aria-label="A trail winding up a green hill">
+  <rect width="400" height="300" fill="#dcebf7"/>
+  <circle cx="320" cy="60" r="26" fill="#ffd97a"/>
+  <path d="M0 190 Q120 120 230 170 T400 150 V300 H0 Z" fill="#8fbf7f"/>
+  <path d="M0 240 Q140 190 400 230 V300 H0 Z" fill="#79ab69"/>
+  <path d="M180 300 Q200 240 185 200 Q175 170 195 140" fill="none" stroke="#e8d9b8" stroke-width="16" stroke-linecap="round"/>
+  <path d="M180 300 Q200 240 185 200 Q175 170 195 140" fill="none" stroke="#d9c6a0" stroke-width="3" stroke-dasharray="8 10"/>
+  <circle cx="90" cy="205" r="18" fill="#5f8f52"/>
+  <rect x="86" y="218" width="8" height="16" fill="#7a5c40"/>
+  <circle cx="300" cy="235" r="22" fill="#5f8f52"/>
+  <rect x="296" y="252" width="8" height="18" fill="#7a5c40"/>
+  <path d="M60 80 q14 -10 28 0 q14 -10 28 0" fill="none" stroke="#fff" stroke-width="5" stroke-linecap="round" opacity=".8"/>
+</svg>

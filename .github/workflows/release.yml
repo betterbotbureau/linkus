@@ -1,0 +1,79 @@
+# Release: push a tag v* and a GitHub release appears with the builds.
+# Not platform-signed. Only GitHub's own actions and the runner's gh CLI:
+# no third-party code with repo credentials.
+name: release
+
+on:
+  push:
+    tags: ["v*"]
+
+permissions:
+  contents: write
+  # Build attestation: provenance that each binary came from this
+  # workflow run on the tagged source.
+  id-token: write
+  attestations: write
+
+jobs:
+  release:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - name: test
+        run: go vet ./... && go test ./...
+      - name: build
+        run: |
+          set -eu
+          mkdir -p out
+          build() { # GOOS GOARCH file [env...]
+            os=$1 arch=$2 file=$3; shift 3
+            env GOOS="$os" GOARCH="$arch" CGO_ENABLED=0 "$@" \
+              go build -trimpath -ldflags "-s -w -X main.version=${GITHUB_REF_NAME}" \
+              -o "out/$file" ./cmd/linknode
+          }
+          build linux   amd64   linknode-linux-amd64
+          build linux   arm64   linknode-linux-arm64
+          build linux   arm     linknode-linux-armv7   GOARM=7
+          build linux   386     linknode-linux-386
+          build linux   riscv64 linknode-linux-riscv64
+          build linux   mips    linknode-linux-mips    GOMIPS=softfloat
+          build linux   mipsle  linknode-linux-mipsle  GOMIPS=softfloat
+          build windows amd64   linknode-windows-amd64.exe
+          build darwin  amd64   linknode-darwin-amd64
+          build darwin  arm64   linknode-darwin-arm64
+      - name: checksums
+        run: cd out && sha256sum * > sha256sums.txt && cat sha256sums.txt
+      - name: attest build provenance
+        uses: actions/attest-build-provenance@v2
+        with:
+          subject-path: out/*
+      - name: release notes
+        # The notes are the tag's CHANGELOG.md section. A tag without one
+        # stops here, so no release ships without saying what changed.
+        run: |
+          set -eu
+          awk -v tag="${GITHUB_REF_NAME}" '
+            /^## / { if (found) exit; found = ($2 == tag); next }
+            found { print }
+          ' CHANGELOG.md > notes.md
+          if ! grep -q '[^[:space:]]' notes.md; then
+            echo "CHANGELOG.md has no section for ${GITHUB_REF_NAME}"; exit 1
+          fi
+          cat >> notes.md <<NOTES
+
+          ---
+          **Downloads:** pick the \`linknode-<os>-<arch>\` file for your device; [docs/INSTALL.md](https://github.com/${GITHUB_REPOSITORY}/blob/main/docs/INSTALL.md) has the table.
+
+          **Verify** a download against \`sha256sums.txt\`, or check its build attestation: \`gh attestation verify <file> --repo ${GITHUB_REPOSITORY}\`.
+          NOTES
+          cat notes.md
+      - name: publish release
+        env:
+          GH_TOKEN: ${{ github.token }}
+        run: |
+          gh release create "${GITHUB_REF_NAME}" out/* \
+            --title "Link Node ${GITHUB_REF_NAME}" \
+            --notes-file notes.md

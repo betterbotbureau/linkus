@@ -1,0 +1,72 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Alex's Place</title>
+<link rel="stylesheet" href="style.css">
+</head>
+<body>
+<div class="wrap">
+  <header><h1><a href="index.html">Alex's Place</a></h1></header>
+  <nav>
+    <a href="index.html" aria-current="page">About</a>
+    <a href="notes.html">Notes</a>
+    <a href="projects.html">Projects</a>
+    <a href="for-sale.html">For sale</a>
+  </nav>
+
+  <p>Hi, I'm Alex. This is my place on the web — not an account on
+  someone's platform, but a folder on my own computer, served straight
+  from here to you. I keep my photos, notes, projects and the occasional
+  thing I'm selling on it.</p>
+
+  <p class="muted">My AI agent maintains these pages for me: I tell it
+  what changed, it edits the folder, and the site is updated. The
+  computer under my desk does the rest.</p>
+
+  <h2>Photos</h2>
+  <div class="gallery">
+    <img src="photos/desk.svg" alt="My desk by the window, morning light">
+    <img src="photos/trail.svg" alt="The hill trail I run on Sundays">
+    <img src="photos/loaf.svg" alt="Saturday's sourdough, best one yet">
+    <img src="photos/workbench.svg" alt="The garage workbench, mid-project">
+  </div>
+  <p class="muted">Tap a photo to view it large.</p>
+
+  <h2>Now</h2>
+  <p>Learning woodworking, training for a 10&nbsp;k in spring, and slowly
+  reading through the sci-fi shelf I inherited from my uncle. The
+  <a href="projects.html">projects page</a> has the longer version.</p>
+
+  <h2>Say hello</h2>
+  <p>
+    <a class="btn" href="mailto:alex@example.com">Email me</a>
+    <a class="btn" href="notes.html">Read my notes</a>
+  </p>
+</div>
+
+<div id="lightbox" aria-hidden="true"><img alt=""></div>
+<script>
+// A tiny gallery lightbox. The site's own scripts run because a
+// published site has its own origin; keep offline.html script-free —
+// scripts never run there.
+(function () {
+  var box = document.getElementById("lightbox");
+  var big = box.querySelector("img");
+  document.querySelectorAll(".gallery img").forEach(function (img) {
+    img.addEventListener("click", function () {
+      big.src = img.src;
+      big.alt = img.alt;
+      box.classList.add("open");
+    });
+  });
+  box.addEventListener("click", function () { box.classList.remove("open"); });
+  document.addEventListener("keydown", function (e) {
+    if (e.key === "Escape") box.classList.remove("open");
+  });
+})();
+</script>
+<footer class="powered"><a href="https://link.us" target="_blank" rel="noopener">Powered by link.us</a></footer>
+</body>
+</html>

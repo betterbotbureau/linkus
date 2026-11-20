@@ -1,0 +1,41 @@
+# CI: the checks a release must pass, on every push and pull request.
+# Only GitHub's own actions: no third-party code with repo credentials.
+name: ci
+
+on:
+  push:
+    branches: ["main"]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-go@v5
+        with:
+          go-version: "stable"
+      - name: gofmt
+        run: |
+          out=$(gofmt -l .)
+          if [ -n "$out" ]; then
+            echo "gofmt needed on:" "$out"
+            exit 1
+          fi
+      - name: vet
+        run: go vet ./...
+      - name: test
+        run: go test ./...
+      - name: cross-compile
+        run: |
+          set -eu
+          for t in linux/amd64 linux/arm64 linux/386 linux/riscv64 windows/amd64 darwin/amd64 darwin/arm64; do
+            CGO_ENABLED=0 GOOS=${t%/*} GOARCH=${t#*/} go build -o /dev/null ./cmd/linknode
+          done
+          CGO_ENABLED=0 GOOS=linux GOARCH=arm GOARM=7 go build -o /dev/null ./cmd/linknode
+          for a in mips mipsle; do
+            CGO_ENABLED=0 GOOS=linux GOARCH=$a GOMIPS=softfloat go build -o /dev/null ./cmd/linknode
+          done

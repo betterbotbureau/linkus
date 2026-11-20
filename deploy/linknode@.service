@@ -1,0 +1,32 @@
+# Run Link Node as a service on a headless Linux device (Raspberry Pi,
+# NAS, mini PC), as an existing login user. EXAMPLE ONLY — review before
+# installing.
+#
+#   sudo install linknode-linux-arm64 /usr/local/bin/linknode
+#   sudo cp linknode@.service /etc/systemd/system/
+#   sudo systemctl enable --now linknode@pi      # "pi" = the login user
+#
+# The node keeps its identity and settings in that user's
+# ~/Link/settings/, including the optional linknode.conf, so the same
+# user's SSH commands (`linknode status`, `linknode publish on`, ...) act
+# on this node with no extra flags.
+[Unit]
+Description=Link Node for %i
+After=network-online.target
+Wants=network-online.target
+
+[Service]
+User=%i
+ExecStart=/usr/local/bin/linknode run
+Restart=on-failure
+RestartSec=5
+
+# Hardening that leaves the user's home writable (identity, public folder).
+NoNewPrivileges=yes
+ProtectSystem=full
+PrivateTmp=yes
+ProtectKernelTunables=yes
+ProtectControlGroups=yes
+
+[Install]
+WantedBy=multi-user.target
