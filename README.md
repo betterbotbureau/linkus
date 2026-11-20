@@ -86,6 +86,19 @@ To keep it running, install the [systemd unit](deploy/linknode@.service).
 every command and setting, running as a service, and building from
 source.
 
+## With an AI agent
+
+Coding agents can install Link Node, build the site and publish it:
+
+- point the agent at **https://link.us/agents.md** (step-by-step
+  instructions written for agents), or
+- add the [`link-node` skill](skills/link-node/SKILL.md) to your agent,
+  for example `cp -r skills/link-node ~/.claude/skills/` for Claude Code.
+
+Once installed, the node keeps `AGENTS.md` and `CLAUDE.md` in the public
+folder with the site's address and rules, so any agent opened there knows
+what to do.
+
 ## What the node does, and doesn't
 
 - keeps its identity local: the private key is never sent anywhere; it
