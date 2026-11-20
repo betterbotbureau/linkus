@@ -28,8 +28,8 @@ is on the PATH. In the Mac app it is
 ## 2. Install it
 
 **Windows, Mac, a Linux PC with a desktop:** the owner downloads the app
-from https://link.us/#download and opens it once. It is not signed by
-Apple or Microsoft, so the first start shows a warning:
+from https://link.us/#download and opens it once. Windows and macOS show a
+warning the first time:
 
 - Windows: *More info → Run anyway*.
 - Mac: *Done*, then *System Settings → Privacy & Security → Open Anyway*.

@@ -30,8 +30,7 @@ source:
 gh attestation verify linknode-linux-arm64 --repo betterbotbureau/linkus
 ```
 
-The binaries are not signed with a platform certificate, so Windows and
-macOS warn on first start. Verify the checksum or the attestation, or
+Windows and macOS warn the first time a downloaded binary starts. Verify the checksum or the attestation, or
 build from source.
 
 ## First run
