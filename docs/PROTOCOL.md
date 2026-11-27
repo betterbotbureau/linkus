@@ -21,7 +21,7 @@ never assigned to another node** (see below).
 
 | Endpoint | Purpose |
 | --- | --- |
-| `POST /v1/nodes` | Register a public key, get a node ID. Signed. Repeating it for a registered key returns the same ID and confirms the node still exists. New IDs are rate-limited per network and service-wide. |
+| `POST /v1/nodes` | Register a public key, get a node ID. Signed. Repeating it for a registered key returns the same ID and confirms the node still exists. New IDs are rate-limited per network (per IPv4 address; per IPv6 /64 and /48). When the service is busy, a `429` reply may carry a challenge the node answers before sending the registration again. |
 | `GET /v1/nodes/{id}` | Node status: online/suspended, last seen, public key. Readable from any website (`Access-Control-Allow-Origin: *`, no credentials). |
 | `GET /v1/node/connect` | WebSocket the node holds while running (presence). The service issues a challenge; the node signs it. If another copy of the node is already connected and answers a ping, the newcomer is closed with code 4001 ("in use") and stays offline; a connection that does not answer is replaced. |
 | `GET /v1/visit` | WebSocket a visitor's shell uses for WebRTC signaling with one node. Accepted from any origin. |

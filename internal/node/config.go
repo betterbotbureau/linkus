@@ -28,6 +28,10 @@ type Config struct {
 	// environment or the config file, so the saved folder choice is
 	// ignored. Set by Defaults.
 	PublicDirPinned bool
+
+	// The folders that are the defaults under ~/Link (set by Defaults):
+	// only these are renamed by AdoptLinkFolders.
+	dataDirDefault, publicDirDefault bool
 }
 
 // Defaults fills empty fields with the documented defaults.
@@ -45,6 +49,7 @@ func (c *Config) Defaults() error {
 			return err
 		}
 		c.DataDir = dir
+		c.dataDirDefault = true
 	}
 	if c.PublicDir == "" {
 		// The folder picked on the settings page outlives the run; an
@@ -56,7 +61,8 @@ func (c *Config) Defaults() error {
 			if err != nil {
 				return fmt.Errorf("resolve home dir: %w", err)
 			}
-			c.PublicDir = filepath.Join(home, "Link", "public")
+			c.PublicDir = LinkFolder(home, "Public")
+			c.publicDirDefault = true
 		}
 	}
 	if c.PreviewAddr == "" {
@@ -86,16 +92,16 @@ func CheckPublicDir(publicDir, dataDir string) error {
 	// same text reaches the terminal at startup and the settings page when
 	// a change is declined, and in both places nothing has been applied.
 	if pub == filepath.Dir(pub) {
-		return fmt.Errorf("refusing to serve %s: it is a filesystem root; pick a dedicated folder such as ~/Link/public", pub)
+		return fmt.Errorf("refusing to serve %s: it is a filesystem root; pick a dedicated folder such as ~/Link/Public", pub)
 	}
 
 	if home, err := os.UserHomeDir(); err == nil {
 		if samePath(pub, home) {
-			return fmt.Errorf("refusing to serve %s: it is your home directory, and everything in it would become public; pick a dedicated folder such as %s", pub, filepath.Join(home, "Link", "public"))
+			return fmt.Errorf("refusing to serve %s: it is your home directory, and everything in it would become public; pick a dedicated folder such as %s", pub, filepath.Join(home, "Link", "Public"))
 		}
 		for _, name := range []string{"Desktop", "Documents", "Downloads"} {
 			if samePath(pub, filepath.Join(home, name)) {
-				return fmt.Errorf("refusing to serve %s: it is your %s folder, and its existing contents would become public; pick a dedicated folder such as %s", pub, name, filepath.Join(home, "Link", "public"))
+				return fmt.Errorf("refusing to serve %s: it is your %s folder, and its existing contents would become public; pick a dedicated folder such as %s", pub, name, filepath.Join(home, "Link", "Public"))
 			}
 		}
 	}

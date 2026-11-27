@@ -64,8 +64,8 @@ func addCommand(after string, c command) {
 var flagLines = []string{
 	"--config        config file             (LINKNODE_CONFIG, default linknode.conf in the data dir, if present)",
 	"--server        Link.us service base URL (LINKNODE_SERVER, default https://hub.link.us)",
-	"--data-dir      settings and identity   (LINKNODE_DATA_DIR, default ~/Link/settings)",
-	"--public-dir    the public folder       (LINKNODE_PUBLIC_DIR, default ~/Link/public)",
+	"--data-dir      settings and identity   (LINKNODE_DATA_DIR, default ~/Link/Settings)",
+	"--public-dir    the public folder       (LINKNODE_PUBLIC_DIR, default ~/Link/Public)",
 	"--preview-addr  local preview listener  (LINKNODE_PREVIEW_ADDR, default 127.0.0.1:7465)",
 	"--stun          STUN servers, comma-separated (LINKNODE_STUN, default derived from --server)",
 	"--portmap       ask the router for a UDP port mapping (LINKNODE_PORTMAP, default true)",
@@ -74,6 +74,16 @@ var flagLines = []string{
 // extraFlags registers flags beyond the core ones on every command.
 var extraFlags []func(fs *flag.FlagSet, cfg *node.Config)
 
+// afterCommand runs when a command has finished without an error, after
+// its cleanup; builds with more features may start another program here.
+var afterCommand func()
+
+func finished() {
+	if afterCommand != nil {
+		afterCommand()
+	}
+}
+
 func main() {
 	// No command means run: on a device, a service starts the binary as is.
 	if len(os.Args) < 2 {
@@ -81,6 +91,7 @@ func main() {
 			fmt.Fprintln(os.Stderr, "linknode:", err)
 			os.Exit(1)
 		}
+		finished()
 		return
 	}
 	name := os.Args[1]
@@ -94,6 +105,7 @@ func main() {
 				fmt.Fprintln(os.Stderr, "linknode:", err)
 				os.Exit(1)
 			}
+			finished()
 			return
 		}
 	}
@@ -178,12 +190,12 @@ func parseConfig(name string, args []string, extra func(*flag.FlagSet)) (node.Co
 	} else {
 		dataDir := cfg.DataDir
 		if dataDir == "" {
-			// The default settings folder moved to ~/Link/settings; bring
+			// The default settings folder moved to ~/Link/Settings; bring
 			// an older node's settings (and identity) along, once.
 			if from, err := node.MigrateDataDir(); err != nil {
 				fmt.Fprintln(os.Stderr, "linknode: could not move the settings folder:", err)
 			} else if from != "" {
-				fmt.Fprintf(os.Stderr, "Moved Link Node's settings from %s to ~/Link/settings.\n", from)
+				fmt.Fprintf(os.Stderr, "Moved Link Node's settings from %s to ~/Link/Settings.\n", from)
 			}
 			d, err := node.DefaultDataDir()
 			if err != nil {
@@ -258,6 +270,7 @@ func cmdRun(args []string) error {
 	if alreadyRunning != nil && alreadyRunning(cfg) {
 		return nil
 	}
+	node.AdoptLinkFolders(&cfg)
 	log := slog.New(slog.NewTextHandler(os.Stderr, nil))
 
 	if err := node.CheckPublicDir(cfg.PublicDir, cfg.DataDir); err != nil {
@@ -432,8 +445,15 @@ func cmdRun(args []string) error {
 	}
 	<-ctx.Done()
 	log.Info("shutting down")
+	for _, f := range atShutdown {
+		f()
+	}
 	return nil
 }
+
+// atShutdown runs, in order, when a running node stops: features that
+// must stop something of theirs before the process exits add to it.
+var atShutdown []func()
 
 func cmdStatus(args []string) error {
 	cfg, err := parseConfig("status", args, nil)

@@ -1,6 +1,6 @@
 ---
 name: link-node
-description: Put a website online from the owner's own computer, Raspberry Pi, NAS or server with Link Node, with no hosting account, upload or port forwarding. Use when someone wants a homepage, portfolio, small business page or file sharing served from their own machine, or mentions Link Node, link.us or a ~/Link/public folder.
+description: Put a website online from the owner's own computer, Raspberry Pi, NAS or server with Link Node, with no hosting account, upload or port forwarding. Use when someone wants a homepage, portfolio, small business page or file sharing served from their own machine, or mentions Link Node, link.us or a ~/Link/Public folder.
 ---
 
 # Link Node
@@ -17,7 +17,7 @@ or makes their site public.
 
 ## 1. Is Link Node already there?
 
-Look for the folder `~/Link/public` containing `AGENTS.md`. If it is
+Look for the folder `~/Link/Public` containing `AGENTS.md`. If it is
 there, Link Node is installed: read that `AGENTS.md` (it has the site's
 own address and rules) and go to step 3.
 
@@ -36,7 +36,7 @@ the first time; on a Mac, the owner allows it once in Settings:
 
 Explain this to the owner and let them do it; do not work around the
 warning yourself. The app then shows its settings window and creates
-`~/Link/public`.
+`~/Link/Public`.
 
 **Raspberry Pi, NAS, server, router (no screen):** the open-source
 command-line node. With the owner's OK:
@@ -46,7 +46,7 @@ command-line node. With the owner's OK:
 # linux-386, linux-riscv64, linux-mips, linux-mipsle
 curl -LO https://github.com/betterbotbureau/linkus/releases/latest/download/linknode-linux-arm64
 sudo install linknode-linux-arm64 /usr/local/bin/linknode
-linknode run      # first run: creates the identity and ~/Link/public; Ctrl-C after it prints the address
+linknode run      # first run: creates the identity and ~/Link/Public; Ctrl-C after it prints the address
 ```
 
 To keep it running, install the systemd unit from
@@ -55,7 +55,7 @@ https://github.com/betterbotbureau/linkus/blob/main/deploy/linknode@.service
 
 ## 3. Build the site
 
-- Write the files into the public folder (`~/Link/public` unless
+- Write the files into the public folder (`~/Link/Public` unless
   `linknode folder` says otherwise). `index.html` is the homepage.
 - Plain HTML, CSS, images and JavaScript, as on any static host. There is
   no build step and no server code: nothing in the folder ever runs on

@@ -75,39 +75,65 @@ func ConfirmLoop(ctx context.Context, server string, id *identity.Identity, log 
 }
 
 // requestID posts a signed registration and returns the ID in the reply.
+// A busy service may ask for registration work first (protocol/regwork.go):
+// the node does it once and sends the registration again.
 func requestID(ctx context.Context, server string, id *identity.Identity) (string, error) {
-	body, err := json.Marshal(protocol.RegisterRequest{
+	req := protocol.RegisterRequest{
 		PublicKey: id.PublicKeyBase64(),
 		Signature: base64.StdEncoding.EncodeToString(id.Sign(protocol.RegisterSigningBytes(id.PublicKey))),
-	})
+	}
+	nodeID, ch, err := postRegister(ctx, server, req)
+	if ch == nil {
+		return nodeID, err
+	}
+	work, werr := protocol.SolveRegisterWork(ctx, ch.Challenge, id.PublicKey, ch.Difficulty)
+	if werr != nil {
+		return "", fmt.Errorf("%w (%v)", err, werr)
+	}
+	req.Challenge, req.Work = ch.Challenge, work
+	nodeID, _, err = postRegister(ctx, server, req)
+	return nodeID, err
+}
+
+// postRegister sends one registration. A reply asking for registration
+// work comes back as the challenge, with the refusal as the error.
+func postRegister(ctx context.Context, server string, r protocol.RegisterRequest) (string, *protocol.RegisterChallengeReply, error) {
+	body, err := json.Marshal(r)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	req, err := http.NewRequestWithContext(ctx, http.MethodPost, strings.TrimSuffix(server, "/")+"/v1/nodes", bytes.NewReader(body))
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	req.Header.Set("Content-Type", "application/json")
 	resp, err := httpClient.Do(req)
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	defer resp.Body.Close()
 	data, err := io.ReadAll(io.LimitReader(resp.Body, protocol.MaxBodyBytes))
 	if err != nil {
-		return "", err
+		return "", nil, err
 	}
 	if resp.StatusCode != http.StatusOK {
-		return "", fmt.Errorf("registration rejected: %s: %s", resp.Status, strings.TrimSpace(string(data)))
+		err := fmt.Errorf("registration rejected: %s: %s", resp.Status, strings.TrimSpace(string(data)))
+		var ch protocol.RegisterChallengeReply
+		if resp.StatusCode == http.StatusTooManyRequests && json.Unmarshal(data, &ch) == nil &&
+			ch.Challenge != "" && len(ch.Challenge) <= protocol.MaxRegisterChallenge &&
+			ch.Difficulty > 0 && ch.Difficulty <= protocol.MaxRegisterDifficulty && r.Work == "" {
+			return "", &ch, err
+		}
+		return "", nil, err
 	}
 	var reply protocol.RegisterResponse
 	if err := json.Unmarshal(data, &reply); err != nil {
-		return "", fmt.Errorf("parse registration reply: %w", err)
+		return "", nil, fmt.Errorf("parse registration reply: %w", err)
 	}
 	if !protocol.ValidNodeID(reply.ID) {
-		return "", fmt.Errorf("registration reply carries an invalid ID %q", reply.ID)
+		return "", nil, fmt.Errorf("registration reply carries an invalid ID %q", reply.ID)
 	}
-	return reply.ID, nil
+	return reply.ID, nil, nil
 }
 
 // RegisterLoop retries registration with backoff until it succeeds or ctx

@@ -19,7 +19,7 @@ Keep this folder private: identity.json is the key that proves your
 address is yours.
 
 To move your node to another computer, copy this folder to
-~/Link/settings there (or use "linknode export" and "linknode restore"),
+~/Link/Settings there (or use "linknode export" and "linknode restore"),
 quit Link Node here, then start it there. Only one copy runs a node: a
 copy started while another is running stays offline. Stop it from
 starting here (Start at login, or its service) if you no longer use this

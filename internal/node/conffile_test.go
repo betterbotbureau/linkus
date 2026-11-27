@@ -2,6 +2,7 @@ package node
 
 import (
 	"flag"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
@@ -195,4 +196,128 @@ func TestDefaultsMarksPinnedPublicDir(t *testing.T) {
 	if !c.PublicDirPinned || c.PublicDir != "/explicit" {
 		t.Fatalf("explicit: pinned=%v dir=%q", c.PublicDirPinned, c.PublicDir)
 	}
+}
+
+// oldHome makes a home with a v2.05-style ~/Link/settings (holding an
+// identity) and ~/Link/public, and points $HOME at it.
+func oldHome(t *testing.T) string {
+	t.Helper()
+	home := t.TempDir()
+	t.Setenv("HOME", home)
+	for _, d := range []string{"settings", "public"} {
+		if err := os.MkdirAll(filepath.Join(home, "Link", d), 0o700); err != nil {
+			t.Fatal(err)
+		}
+	}
+	if _, err := os.Stat(filepath.Join(home, "Link", "Settings")); err == nil {
+		t.Skip("this file system ignores case")
+	}
+	os.WriteFile(filepath.Join(home, "Link", "settings", "identity.json"), []byte("{}"), 0o600) //nolint:errcheck
+	os.WriteFile(filepath.Join(home, "Link", "public", "index.html"), []byte("hi"), 0o644)      //nolint:errcheck
+	return home
+}
+
+// A free loopback address for the preview, so no running node is seen.
+func freeAddr(t *testing.T) string {
+	t.Helper()
+	ln, err := net.Listen("tcp", "127.0.0.1:0")
+	if err != nil {
+		t.Fatal(err)
+	}
+	addr := ln.Addr().String()
+	ln.Close()
+	return addr
+}
+
+// Until the node starts, commands use the old lowercase folders as they
+// are; the starting node renames them, so an upgrade keeps its identity
+// and site where case matters (Linux).
+func TestLinkFoldersAdoptedAtStart(t *testing.T) {
+	home := oldHome(t)
+	c := Config{PreviewAddr: freeAddr(t)}
+	if err := c.Defaults(); err != nil {
+		t.Fatal(err)
+	}
+	if c.DataDir != filepath.Join(home, "Link", "settings") || c.PublicDir != filepath.Join(home, "Link", "public") {
+		t.Fatalf("before start: %s %s", c.DataDir, c.PublicDir)
+	}
+	AdoptLinkFolders(&c)
+	if c.DataDir != filepath.Join(home, "Link", "Settings") || c.PublicDir != filepath.Join(home, "Link", "Public") {
+		t.Fatalf("after start: %s %s", c.DataDir, c.PublicDir)
+	}
+	for _, f := range []string{"Settings/identity.json", "Public/index.html"} {
+		if _, err := os.Stat(filepath.Join(home, "Link", f)); err != nil {
+			t.Fatalf("%s not moved: %v", f, err)
+		}
+	}
+	// The next start finds the new folders.
+	c2 := Config{}
+	if err := c2.Defaults(); err != nil || c2.DataDir != filepath.Join(home, "Link", "Settings") {
+		t.Fatalf("next start: %s %v", c2.DataDir, err)
+	}
+}
+
+func TestLinkFoldersNotMoved(t *testing.T) {
+	t.Run("a node runs", func(t *testing.T) {
+		home := oldHome(t)
+		ln, err := net.Listen("tcp", "127.0.0.1:0")
+		if err != nil {
+			t.Fatal(err)
+		}
+		defer ln.Close()
+		c := Config{PreviewAddr: ln.Addr().String()}
+		c.Defaults() //nolint:errcheck
+		AdoptLinkFolders(&c)
+		if c.DataDir != filepath.Join(home, "Link", "settings") {
+			t.Fatalf("moved under a running node: %s", c.DataDir)
+		}
+	})
+	t.Run("chosen folders", func(t *testing.T) {
+		home := oldHome(t)
+		c := Config{PreviewAddr: freeAddr(t), DataDir: filepath.Join(home, "Link", "settings"), PublicDir: filepath.Join(home, "Link", "public")}
+		c.Defaults() //nolint:errcheck
+		AdoptLinkFolders(&c)
+		if _, err := os.Stat(filepath.Join(home, "Link", "settings")); err != nil {
+			t.Fatal("a chosen settings folder was moved")
+		}
+		if _, err := os.Stat(filepath.Join(home, "Link", "public")); err != nil {
+			t.Fatal("a chosen public folder was moved")
+		}
+	})
+	t.Run("both exist", func(t *testing.T) {
+		home := oldHome(t)
+		os.MkdirAll(filepath.Join(home, "Link", "Public"), 0o755) //nolint:errcheck
+		c := Config{PreviewAddr: freeAddr(t)}
+		c.Defaults() //nolint:errcheck
+		AdoptLinkFolders(&c)
+		if c.PublicDir != filepath.Join(home, "Link", "Public") {
+			t.Fatalf("public: %s", c.PublicDir)
+		}
+		if _, err := os.Stat(filepath.Join(home, "Link", "public", "index.html")); err != nil {
+			t.Fatal("old folder touched although the new one exists")
+		}
+	})
+	t.Run("a file, and a link", func(t *testing.T) {
+		home := t.TempDir()
+		t.Setenv("HOME", home)
+		link := filepath.Join(home, "Link")
+		os.MkdirAll(link, 0o755)                                          //nolint:errcheck
+		os.WriteFile(filepath.Join(link, "settings"), []byte("x"), 0o600) //nolint:errcheck
+		if _, err := os.Stat(filepath.Join(link, "Settings")); err == nil {
+			t.Skip("this file system ignores case")
+		}
+		elsewhere := t.TempDir()
+		if err := os.Symlink(elsewhere, filepath.Join(link, "public")); err != nil {
+			t.Skip("no symlinks here")
+		}
+		c := Config{PreviewAddr: freeAddr(t)}
+		c.Defaults() //nolint:errcheck
+		AdoptLinkFolders(&c)
+		if c.DataDir != filepath.Join(link, "Settings") {
+			t.Fatalf("a file counted as the settings folder: %s", c.DataDir)
+		}
+		if target, err := os.Readlink(filepath.Join(link, "Public")); err != nil || target != elsewhere {
+			t.Fatalf("link not renamed as a link: %q %v", target, err)
+		}
+	})
 }

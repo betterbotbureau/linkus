@@ -3,6 +3,15 @@
 What changed in each release of the command-line node. Downloads are on
 the [releases page](https://github.com/betterbotbureau/linkus/releases).
 
+## v1.15
+
+- **Folder names start with a capital letter:** `~/Link/Public` and
+  `~/Link/Settings`. The first time v1.15 starts, it renames the old
+  `public` and `settings` folders, so your site, settings and address
+  stay as they are. Folders you chose yourself (flag, environment or
+  config file) are not moved, and nothing is moved while another copy
+  of the node is running.
+
 ## v1.14
 
 The first release of the open-source command-line node: the core of

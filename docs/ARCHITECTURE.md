@@ -15,7 +15,7 @@ Three parts, with a deliberately small middle:
 ## Identity
 
 Each node generates an Ed25519 key pair on first run and keeps it in its
-settings folder (`~/Link/settings/identity.json`). The private key is
+settings folder (`~/Link/Settings/identity.json`). The private key is
 never sent anywhere; it leaves the device only when the owner copies the
 settings folder or exports the node. A second copy of the key is kept
 outside `~/Link`, so deleting the settings folder resets the settings but

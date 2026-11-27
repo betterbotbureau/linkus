@@ -54,6 +54,10 @@ const CloseInUse = 4001
 type RegisterRequest struct {
 	PublicKey string `json:"public_key"` // base64 (std encoding) Ed25519 public key
 	Signature string `json:"signature"`  // base64 signature over RegisterSigningBytes
+	// Challenge and Work answer a RegisterChallengeReply (regwork.go);
+	// empty unless the service asked for them.
+	Challenge string `json:"challenge,omitempty"`
+	Work      string `json:"work,omitempty"`
 }
 
 // RegisterResponse is the reply to a successful registration.

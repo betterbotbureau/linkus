@@ -8,9 +8,11 @@ import (
 	"fmt"
 	"io"
 	"io/fs"
+	"net"
 	"os"
 	"path/filepath"
 	"strings"
+	"time"
 )
 
 // ConfigFileName is the config file a node reads from its data directory
@@ -144,14 +146,81 @@ func expandHome(p string) string {
 }
 
 // DefaultDataDir is the settings folder used when none is configured:
-// ~/Link/settings, next to the website folder ~/Link/public, so
+// ~/Link/Settings, next to the website folder ~/Link/Public, so
 // everything that is the owner's Link lives in one place they can find.
 func DefaultDataDir() (string, error) {
 	home, err := os.UserHomeDir()
 	if err != nil {
 		return "", fmt.Errorf("resolve home dir: %w", err)
 	}
-	return filepath.Join(home, "Link", "settings"), nil
+	return LinkFolder(home, "Settings"), nil
+}
+
+// LinkFolder is ~/Link/<name>. Releases up to v2.05 used lowercase names
+// (~/Link/settings, ~/Link/public); where case matters (Linux), those
+// are other folders, so while only the old one exists it is the one in
+// use. AdoptLinkFolders renames it when the node starts.
+func LinkFolder(home, name string) string {
+	dir := filepath.Join(home, "Link", name)
+	if old, ok := oldLinkFolder(home, name); ok {
+		return old
+	}
+	return dir
+}
+
+// oldLinkFolder reports the lowercase folder when it exists and the
+// capitalised one does not (a system that ignores case finds both).
+func oldLinkFolder(home, name string) (string, bool) {
+	dir := filepath.Join(home, "Link", name)
+	old := filepath.Join(home, "Link", strings.ToLower(name))
+	if old == dir {
+		return "", false
+	}
+	if _, err := os.Lstat(dir); !errors.Is(err, fs.ErrNotExist) {
+		return "", false
+	}
+	if fi, err := os.Stat(old); err != nil || !fi.IsDir() {
+		return "", false // not a folder (a link to one counts as one)
+	}
+	return old, true
+}
+
+// AdoptLinkFolders renames an old lowercase default folder to its
+// capitalised name. Only a starting node calls it, and it does nothing
+// while another node answers on the preview address, so no running node
+// has its folder moved away; a folder chosen by flag, environment,
+// config file or the settings page is never moved. If a rename fails,
+// the old folder stays in use.
+func AdoptLinkFolders(c *Config) {
+	if !c.dataDirDefault && !c.publicDirDefault {
+		return
+	}
+	home, err := os.UserHomeDir()
+	if err != nil {
+		return
+	}
+	if c.PreviewAddr != "" && c.PreviewAddr != "off" {
+		if conn, err := net.DialTimeout("tcp", c.PreviewAddr, 500*time.Millisecond); err == nil {
+			conn.Close()
+			return // another node runs
+		}
+	}
+	adopt := func(dir *string, name string) {
+		old, ok := oldLinkFolder(home, name)
+		if !ok || *dir != old {
+			return
+		}
+		dst := filepath.Join(home, "Link", name)
+		if os.Rename(old, dst) == nil {
+			*dir = dst
+		}
+	}
+	if c.dataDirDefault {
+		adopt(&c.DataDir, "Settings")
+	}
+	if c.publicDirDefault {
+		adopt(&c.PublicDir, "Public")
+	}
 }
 
 // legacyDataDir is where releases up to v1.3 kept the settings folder:
@@ -165,7 +234,7 @@ func legacyDataDir() (string, error) {
 }
 
 // MigrateDataDir moves a node's settings from the pre-v1.4 location to the
-// default ~/Link/settings, once: only when the old folder holds an
+// default ~/Link/Settings, once: only when the old folder holds an
 // identity and the new one does not. It returns the old folder when it
 // moved something. The old folder is renamed rather than deleted, so
 // nothing is lost if anything goes wrong.

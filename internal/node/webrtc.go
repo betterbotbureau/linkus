@@ -84,6 +84,9 @@ type WebRTC struct {
 	// authCheck answers the service's sign-in checks; nil: no visitor
 	// may sign in.
 	authCheck func(email string) bool
+	// visitorOf names the visitor signed in on a visit, or ""; nil: no
+	// sign-in.
+	visitorOf func(v *Visit) string
 }
 
 // AuthChecker answers the service's sign-in checks.
@@ -106,8 +109,19 @@ type Visit struct {
 	stats    *visitStats
 	stayOpen atomic.Bool
 
-	mu    sync.Mutex
-	state map[string]any
+	mu     sync.Mutex
+	state  map[string]any
+	offer  string
+	answer string
+}
+
+// Exchange returns the visit's offer and the node's answer, so a channel
+// can bind a proof to this very connection. The answer is set before any
+// channel can open.
+func (v *Visit) Exchange() (offer, answer string) {
+	v.mu.Lock()
+	defer v.mu.Unlock()
+	return v.offer, v.answer
 }
 
 // StayOpen keeps the visit open while it is idle: a channel that waits on
@@ -343,7 +357,7 @@ func (w *WebRTC) serveVisit(ctx context.Context, visitID, sdp string, send Signa
 	// hostile and is closed.
 	// Other features' pages open their own channels (see HandleChannel).
 	var channels atomic.Int32
-	visit := &Visit{Ctx: visitCtx, Log: log, stats: stats, RemoteIP: func() string {
+	visit := &Visit{Ctx: visitCtx, Log: log, stats: stats, offer: sdp, RemoteIP: func() string {
 		if ip, _ := remoteIP.Load().(string); ip != "" {
 			return ip
 		}
@@ -399,6 +413,9 @@ func (w *WebRTC) serveVisit(ctx context.Context, visitID, sdp string, send Signa
 	// Sign the answer so the visitor can verify it is talking to the key
 	// holder. The offer hash binds the signature to
 	// this exchange; the answer covers the DTLS fingerprint.
+	visit.mu.Lock()
+	visit.answer = local.SDP
+	visit.mu.Unlock()
 	var sig string
 	if w.id != nil {
 		sig = base64.StdEncoding.EncodeToString(

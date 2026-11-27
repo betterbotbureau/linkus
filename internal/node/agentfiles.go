@@ -161,11 +161,18 @@ here IS publishing it (once the owner has flipped the publish switch).
 `, agentFilesMarker, address, LocalURL(previewAddr), extraRules(nodeID))
 }
 
-// extraRules numbers the features' rules after the six core ones.
+// extraRules numbers the features' rules after the six core ones. A
+// feature returns "" to leave its rule out.
 func extraRules(nodeID string) string {
 	var b strings.Builder
-	for i, rule := range agentRules {
-		fmt.Fprintf(&b, "%d. %s\n", 7+i, strings.TrimRight(rule(nodeID), "\n"))
+	n := 7
+	for _, rule := range agentRules {
+		text := strings.TrimRight(rule(nodeID), "\n")
+		if text == "" {
+			continue
+		}
+		fmt.Fprintf(&b, "%d. %s\n", n, text)
+		n++
 	}
 	return b.String()
 }

@@ -7,7 +7,7 @@
 #   sudo systemctl enable --now linknode@pi      # "pi" = the login user
 #
 # The node keeps its identity and settings in that user's
-# ~/Link/settings/, including the optional linknode.conf, so the same
+# ~/Link/Settings/, including the optional linknode.conf, so the same
 # user's SSH commands (`linknode status`, `linknode publish on`, ...) act
 # on this node with no extra flags.
 [Unit]

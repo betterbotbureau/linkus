@@ -50,7 +50,7 @@ on this core and available from [link.us](https://link.us).
 
 1. Run `linknode`. It creates a permanent local identity (an Ed25519 key
    that never leaves the device) and gets a permanent public address.
-2. Put files in the public folder (default `~/Link/public`) and check
+2. Put files in the public folder (default `~/Link/Public`) and check
    the local preview at `http://localhost:7465/`.
 3. Turn publishing on: `linknode publish on`.
 4. A visitor opening the address gets a small bootstrap page from the
@@ -60,7 +60,7 @@ on this core and available from [link.us](https://link.us).
 
 ```
 your device                                  visitor's browser
-~/Link/public  ── direct encrypted P2P ──▶   https://<id>.mdoc.us
+~/Link/Public  ── direct encrypted P2P ──▶   https://<id>.mdoc.us
 ```
 
 When the node is off, visitors see an offline notice (or your offline

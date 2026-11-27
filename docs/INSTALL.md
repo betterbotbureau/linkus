@@ -41,7 +41,7 @@ linknode run
 ```
 
 On first run the node generates its Ed25519 identity in the settings
-folder (`~/Link/settings`), creates the public folder (`~/Link/public`)
+folder (`~/Link/Settings`), creates the public folder (`~/Link/Public`)
 with a placeholder homepage, registers to get its ID, and serves a local
 preview at `http://localhost:7465/`, on the device only. It keeps running
 and serving locally even when the Link service is unreachable.
@@ -84,7 +84,7 @@ linknode status
 linknode publish on
 ```
 
-The service uses that user's `~/Link/settings`, including the optional
+The service uses that user's `~/Link/Settings`, including the optional
 `linknode.conf`, so the same user's SSH commands act on the running node
 with no extra flags. Publishing applies within seconds; a new folder or
 config file applies after `sudo systemctl restart linknode@pi`.
@@ -112,7 +112,7 @@ A second copy of the key is kept outside `~/Link` (a private
 Credential Manager), so deleting `settings` resets the node but keeps its
 address.
 
-- **Moving to another device:** copy `settings` to `~/Link/settings`
+- **Moving to another device:** copy `settings` to `~/Link/Settings`
   there, or use `linknode export` here and `linknode restore` there. Stop
   the node here first: one node runs on one device at a time, and a copy
   started while another one is running stays offline.
@@ -134,8 +134,8 @@ reissued.
 | --- | --- | --- |
 | `--config` | `LINKNODE_CONFIG` | `linknode.conf` in the settings folder, if present |
 | `--server` | `LINKNODE_SERVER` | `https://hub.link.us` |
-| `--data-dir` | `LINKNODE_DATA_DIR` | `~/Link/settings` |
-| `--public-dir` | `LINKNODE_PUBLIC_DIR` | `~/Link/public` |
+| `--data-dir` | `LINKNODE_DATA_DIR` | `~/Link/Settings` |
+| `--public-dir` | `LINKNODE_PUBLIC_DIR` | `~/Link/Public` |
 | `--preview-addr` | `LINKNODE_PREVIEW_ADDR` | `127.0.0.1:7465` |
 | `--stun` | `LINKNODE_STUN` | derived from `--server` |
 | `--portmap` | `LINKNODE_PORTMAP` | `true` |
@@ -145,7 +145,7 @@ flag names without the dashes. `#` starts a comment, `~/` means the home
 directory, and values may be quoted:
 
 ```ini
-# ~/Link/settings/linknode.conf
+# ~/Link/Settings/linknode.conf
 public-dir = /srv/site
 portmap = true
 ```

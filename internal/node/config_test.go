@@ -37,7 +37,7 @@ func TestCheckPublicDir(t *testing.T) {
 		name string
 		dir  string
 	}{
-		{"dedicated folder", filepath.Join(home, "Link", "public")},
+		{"dedicated folder", filepath.Join(home, "Link", "Public")},
 		{"sibling of data dir", filepath.Join(filepath.Dir(data), "public")},
 		{"folder under documents", filepath.Join(home, "Documents", "site")},
 	}

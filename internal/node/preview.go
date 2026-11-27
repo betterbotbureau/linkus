@@ -44,6 +44,11 @@ func StartPreview(addr string, s site.Opener, log *slog.Logger) (*Preview, error
 	return p, nil
 }
 
+// previewRoutes, when another part of the node sets it, answers the
+// requests that are not plain file reads: it returns their handler, or nil
+// for the folder to answer.
+var previewRoutes func(r *http.Request) http.Handler
+
 // Close stops the preview server and releases the folder handle.
 func (p *Preview) Close() error {
 	err := p.srv.Close()
@@ -57,6 +62,12 @@ func (p *Preview) Close() error {
 func previewHandler(s site.Opener) http.Handler {
 	h := site.Handler(s)
 	return http.HandlerFunc(func(w http.ResponseWriter, r *http.Request) {
+		if previewRoutes != nil {
+			if d := previewRoutes(r); d != nil {
+				d.ServeHTTP(w, r)
+				return
+			}
+		}
 		if r.URL.Path == "/" && (r.Method == http.MethodGet || r.Method == http.MethodHead) {
 			if f, err := s.Open("/"); err == nil {
 				f.Close()
