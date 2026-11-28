@@ -106,8 +106,8 @@ func agentFileContent(address, previewAddr string) string {
 	if address == "" {
 		address = "not registered yet — it appears here once the node first reaches the server"
 	}
-	return fmt.Sprintf(`%s; version 1. Replace this file with your own
-instructions if you like — a file without this marker line is never
+	return fmt.Sprintf(`%s; version 1. The owner may replace this file with
+their own instructions — a file without this marker line is never
 overwritten by the node. This file is not served to visitors. -->
 
 # This folder is a live website

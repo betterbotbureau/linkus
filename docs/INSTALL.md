@@ -62,6 +62,8 @@ linknode forget-identity --yes  # give up this node's address for good
 linknode example                # write the example site into a folder with no homepage yet
 linknode public                 # list exactly what visitors can fetch, and what is hidden
 linknode log -n 50              # the last 50 visits: time, outcome, address, duration, paths, bytes
+linknode card                   # this node's card; `linknode card help` for its name and description
+linknode accounts               # link.us accounts that see this node; `code` adds one, `remove` takes one off
 linknode export backup.tar.gz   # identity + state + public folder (contains the PRIVATE KEY)
 linknode restore backup.tar.gz  # bring a node back, same ID (--force to replace an identity)
 linknode version
@@ -71,6 +73,31 @@ There is no automatic updating. When a newer release exists, the node
 says so in the `linknode run` output and on the `Version` line of
 `linknode status`. Replace the binary and restart; the identity and
 settings carry over.
+
+## Card, link.us account and Explore
+
+A node describes itself with a card: a name and a sentence or two,
+signed with its key, that other nodes and agents read. It is public, at
+the node's address under `/.well-known/link-card.json`. Until you name
+it, the card says "Node" and the node's ID, and once the node is
+published, the site's title (so an unpublished site's title stays
+private). Give it your own name and description with:
+
+```sh
+linknode card name "Garden sensors"
+linknode card about "Soil and air readings from a back garden in Leeds."
+```
+
+A running node sends the card to Link.us within a minute. To see the
+node in your link.us account, run `linknode accounts code` and type the
+code on link.us/account under Add a node. From there the account can
+list the node in Explore (link.us/explore), where people and agents find
+it. `linknode accounts` shows which accounts see the node, and which of
+them lists it; `linknode accounts remove <email>` takes one off, and
+with it that account's listing.
+
+When the node is offline, Link.us shows the day it was last online,
+never the time.
 
 ## Running as a service (systemd)
 
@@ -97,11 +124,11 @@ below.
 
 ```
 ~/Link/
-  public/     the website (dotfiles and agent instructions are never served)
-  settings/   the node's settings and identity
+  Public/     the website (dotfiles and agent instructions are never served)
+  Settings/   the node's settings and identity
 ```
 
-`settings` holds whether the site is published, the website folder you
+`Settings` holds whether the site is published, the website folder you
 chose, an optional `linknode.conf`, the visit log, and `identity.json`:
 the key that proves the address is yours. Keep it private, and never put
 it inside the website folder (the node refuses a public folder that
@@ -109,10 +136,10 @@ contains it).
 
 A second copy of the key is kept outside `~/Link` (a private
 `LinkNodeKeys` file in the per-user application folder, or Windows
-Credential Manager), so deleting `settings` resets the node but keeps its
+Credential Manager), so deleting `Settings` resets the node but keeps its
 address.
 
-- **Moving to another device:** copy `settings` to `~/Link/Settings`
+- **Moving to another device:** copy `Settings` to `~/Link/Settings`
   there, or use `linknode export` here and `linknode restore` there. Stop
   the node here first: one node runs on one device at a time, and a copy
   started while another one is running stays offline.

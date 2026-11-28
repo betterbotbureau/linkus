@@ -76,8 +76,10 @@ type ReleaseInfo struct {
 // bootstrap shell verify the node's signed answers; it is
 // public by construction, since registration binds the ID to the key.
 type NodeStatus struct {
-	ID        string    `json:"id"`
-	Online    bool      `json:"online"`
+	ID     string `json:"id"`
+	Online bool   `json:"online"`
+	// LastSeen is the day (UTC midnight) the node was last seen: never
+	// the time of day, which could show its owner's routine.
 	LastSeen  time.Time `json:"last_seen"`
 	PublicKey string    `json:"public_key,omitempty"` // base64 Ed25519
 	// Address is the node's canonical public URL, set by the service when

@@ -3,6 +3,24 @@
 What changed in each release of the command-line node. Downloads are on
 the [releases page](https://github.com/betterbotbureau/linkus/releases).
 
+## v1.16
+
+- **A card for your node.** Its name and a short description, signed
+  with its key, which other nodes and agents read; it is public at the
+  node's address (`/.well-known/link-card.json`). Until you name it, the
+  card says "Node" and the node's ID, and once the node is published,
+  the site's title (an unpublished site's title stays private).
+  `linknode card name …` and `linknode card about …` give your own.
+- **Your node in your link.us account, and in Explore.** `linknode
+  accounts code` shows a code that adds the node to a link.us account;
+  that account sees whether the node is running and its version, and can
+  list it in Explore (link.us/explore). `linknode accounts` shows the
+  accounts and which one lists it; `linknode accounts remove` takes one
+  off.
+- **Last seen: the day only.** Link.us now shows the day an offline
+  node was last online, never the time, in Explore and in its public
+  lookup.
+
 ## v1.15
 
 - **Folder names start with a capital letter:** `~/Link/Public` and

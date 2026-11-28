@@ -22,11 +22,15 @@ never assigned to another node** (see below).
 | Endpoint | Purpose |
 | --- | --- |
 | `POST /v1/nodes` | Register a public key, get a node ID. Signed. Repeating it for a registered key returns the same ID and confirms the node still exists. New IDs are rate-limited per network (per IPv4 address; per IPv6 /64 and /48). When the service is busy, a `429` reply may carry a challenge the node answers before sending the registration again. |
-| `GET /v1/nodes/{id}` | Node status: online/suspended, last seen, public key. Readable from any website (`Access-Control-Allow-Origin: *`, no credentials). |
+| `GET /v1/nodes/{id}` | Node status: online/suspended, last seen, public key. Readable from any website (`Access-Control-Allow-Origin: *`, no credentials). `last_seen` is the day (UTC midnight), never the time. |
 | `GET /v1/node/connect` | WebSocket the node holds while running (presence). The service issues a challenge; the node signs it. If another copy of the node is already connected and answers a ping, the newcomer is closed with code 4001 ("in use") and stays offline; a connection that does not answer is replaced. |
 | `GET /v1/visit` | WebSocket a visitor's shell uses for WebRTC signaling with one node. Accepted from any origin. |
 | `PUT/DELETE /v1/nodes/{id}/offline` | Upload or remove the offline homepage. Signed over method + ID + timestamp + content, ±10 min clock skew, 64 KB cap, rate-limited. |
 | `GET /v1/nodes/{id}/offline` | Serve the stored offline page under a hard no-script CSP. |
+| `PUT /v1/nodes/{id}/card` | Store the node's card (below). The card carries its own signature, made with the node's key; an older card never replaces a newer one. 8 KB cap, rate-limited. |
+| `GET /v1/nodes/{id}/card` | The stored card, also served at the node's address as `/.well-known/link-card.json`, even while the node is off. |
+| `POST /v1/nodes/{id}/accounts` | The link.us accounts that see the node (on link.us/account). Signed over action + ID + timestamp + argument (`linkus-watch-v1:`), ±10 min skew. `code` asks for a one-use code (15 minutes) the owner types on link.us; `list` returns the accounts (each with `listed` when it lists the node in Explore) and is also the node's check-in: its version and edition; `remove` takes an account off. |
+| `GET /v1/search` | Explore's search over listed nodes' cards (`q`, `online=1`, `messages=1`, `limit`, `after`): address, name, description, online, the day last seen, and the card's URL. |
 | `GET /v1/release` | The latest published node release (tag and release page), which the service checks hourly. Nodes ask at startup and daily, to tell their owner about updates. |
 
 Every issued ID is in one of two states:
@@ -43,6 +47,22 @@ Every issued ID is in one of two states:
   **retired**: its record is removed, keeping only the number and the
   node's public key. The number is never issued to another node; the
   same node, proving its key by registering again, gets it back.
+
+## The node card
+
+A small JSON description of the node, signed with its key: `v`, `kind`
+(`linkus-node-card`), `id`, `name` (up to 80 characters), `description`
+(up to 200), `url`, `public_key`, `skills`, `accepts.node_messages`
+(`anyone`, `contacts` or `nobody`), `updated` and `signature`. The
+signature covers `linkus node card v1\n` followed by the card's JSON
+without its signature. A reader checks it against the key the service
+lists for the ID. Without a name from its owner, a node's card is named
+"Node <id>", and while the node is published, after its site's title
+(an unpublished site's title stays private). The command-line node takes no node messages.
+
+An account may list a node in Explore (link.us/explore) from
+link.us/account; only an account the node itself added can. The listing ends
+when that account removes the node, or the node removes the account.
 
 ## Connection setup
 

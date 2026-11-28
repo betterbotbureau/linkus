@@ -350,6 +350,18 @@ func cmdRun(args []string) error {
 	if startDesktop != nil {
 		desk = startDesktop(&runEnv{cfg: cfg, log: log, folder: folder, id: id, created: created, rtc: rtc, updates: updates})
 	}
+	if startDesktop == nil {
+		// The card (the owner's name for the node, or while published the
+		// site's title, else "Node <id>") and the check-in for the link.us
+		// accounts that see the node. The desktop app starts its own.
+		cards := node.OpenNodeCards(cfg.DataDir, id, version, cardNamer(folder.Dir, id), nil)
+		if rtc != nil {
+			rtc.SetNodeCard(cards)
+		}
+		go cards.Run(context.Background(), cfg.Server, log)
+		accounts := node.NewAccounts(cfg.Server, id, version, log)
+		go accounts.Run(context.Background())
+	}
 
 	if cfg.ConfigFile != "" {
 		fmt.Printf("Config file:    %s\n", cfg.ConfigFile)
@@ -524,7 +536,8 @@ func cmdStatus(args []string) error {
 	case st.Online:
 		fmt.Printf("Server:         %s — node online\n", cfg.Server)
 	default:
-		fmt.Printf("Server:         %s — node offline, last seen %s\n", cfg.Server, st.LastSeen.Local().Format(time.RFC3339))
+		// Link.us gives the day only (UTC).
+		fmt.Printf("Server:         %s — node offline, last seen on %s\n", cfg.Server, st.LastSeen.UTC().Format("2006-01-02"))
 	}
 	if err == nil {
 		addr := st.Address
